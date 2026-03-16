@@ -1,0 +1,122 @@
+using System;
+
+using System.Data.SqlClient;
+ 
+namespace AdoNetConsoleApplication
+
+{
+
+    class Program
+
+    {
+
+        // Update this string to match your SQL Server Name
+
+        private string connectionString = "data source=localhost\\SQLEXPRESS; initial catalog=Student; integrated security=SSPI";
+ 
+        static void Main(string[] args)
+
+        {
+
+            Program p = new Program();
+ 
+            Console.WriteLine("--- Delete Student Record ---");
+
+            Console.Write("Enter the ID of the student you want to delete: ");
+
+            if (int.TryParse(Console.ReadLine(), out int idToDelete))
+
+            {
+
+                p.DeleteRecord(idToDelete);
+
+            }
+
+            else
+
+            {
+
+                Console.WriteLine("Invalid input. Please enter a numeric ID.");
+
+            }
+ 
+            Console.WriteLine("\nPress any key to exit...");
+
+            Console.ReadKey();
+
+        }
+ 
+        public void DeleteRecord(int studentId)
+
+        {
+
+            // The WHERE clause ensures only ONE specific row is removed
+
+            string query = "DELETE FROM College WHERE id = @id";
+ 
+            try
+
+            {
+
+                using (SqlConnection con = new SqlConnection(connectionString))
+
+                {
+
+                    using (SqlCommand cm = new SqlCommand(query, con))
+
+                    {
+
+                        // Safely map the parameter
+
+                        cm.Parameters.AddWithValue("@id", studentId);
+ 
+                        con.Open();
+ 
+                        // ExecuteNonQuery returns the number of rows affected
+
+                        int rowsAffected = cm.ExecuteNonQuery();
+ 
+                        if (rowsAffected > 0)
+
+                        {
+
+                            Console.WriteLine($"\nSuccess! Record with ID {studentId} has been deleted.");
+
+                        }
+
+                        else
+
+                        {
+
+                            Console.WriteLine($"\nNo record found with ID {studentId}. Nothing was deleted.");
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            catch (SqlException sqlEx)
+
+            {
+
+                Console.WriteLine("\nDatabase Error: " + sqlEx.Message);
+
+            }
+
+            catch (Exception ex)
+
+            {
+
+                Console.WriteLine("\nGeneral Error: " + ex.Message);
+
+            }
+
+        }
+
+    }
+
+}
+ 
