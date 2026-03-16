@@ -1,0 +1,85 @@
+using System;
+using System.Data;
+using System.Data.SqlClient;
+ 
+namespace AdoNetConsoleApplication
+{
+    class Program
+    {
+        // Centralized connection string for easier updates
+        private string connectionString = "data source=localhost\\SQLEXPRESS; initial catalog=Student; integrated security=SSPI";
+ 
+        static void Main(string[] args)
+        {
+            Program p = new Program();
+            // 1. Create the table
+            p.CreateTable();
+ 
+            // 2. Insert some random sample data
+            p.InsertData(101, "Alice Johnson", "alice.j@example.com", new DateTime(2023, 09, 01));
+            p.InsertData(102, "Bob Smith", "bob.smith@techworld.org", new DateTime(2023, 08, 15));
+            p.InsertData(103, "Charlie Davis", "charlie.d@university.edu", DateTime.Now);
+ 
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
+ 
+        public void CreateTable()
+        {
+            string query = @"IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'College')
+                             CREATE TABLE College (
+                                id INT PRIMARY KEY, 
+                                name VARCHAR(100), 
+                                email VARCHAR(50), 
+                                join_date DATE
+                             )";
+ 
+            try
+            {
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    using (SqlCommand cm = new SqlCommand(query, con))
+                    {
+                        con.Open();
+                        cm.ExecuteNonQuery();
+                        Console.WriteLine("Table check/creation completed.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error creating table: " + e.Message);
+            }
+        }
+ 
+        public void InsertData(int id, string name, string email, DateTime joinDate)
+        {
+            // Use parameters (@id, @name, etc.) to keep your data safe and clean
+            string query = "INSERT INTO College (id, name, email, join_date) VALUES (@id, @name, @email, @join_date)";
+ 
+            try
+            {
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    using (SqlCommand cm = new SqlCommand(query, con))
+                    {
+                        // Adding parameters to the command
+                        cm.Parameters.AddWithValue("@id", id);
+                        cm.Parameters.AddWithValue("@name", name);
+                        cm.Parameters.AddWithValue("@email", email);
+                        cm.Parameters.AddWithValue("@join_date", joinDate);
+ 
+                        con.Open();
+                        cm.ExecuteNonQuery();
+                        Console.WriteLine($"Successfully inserted record for: {name}");
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                // Catching specific errors, like inserting a duplicate ID
+                Console.WriteLine($"SQL Error inserting {name}: " + ex.Message);
+            }
+        }
+    }
+}
