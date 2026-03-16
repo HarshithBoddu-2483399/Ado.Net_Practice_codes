@@ -1,0 +1,59 @@
+using System;
+using System.Data.SqlClient;
+ 
+namespace AdoNetConsoleApplication
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Initializing the class and calling the method
+            Program p = new Program();
+            p.CreateTable();
+ 
+            // Keeps the console window open
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
+ 
+        public void CreateTable()
+        {
+            // Connection string: Ensure the 'student' database exists in your SQL Server
+            // data source = Your SSMS Server Name
+            // initial catalog = The name of the database you see in the SSMS sidebar
+            string connectionString = "data source=LTIN703260\\SQLEXPRESS; initial catalog=Student; integrated security=SSPI";
+ 
+            // Using '@' allows the string to span multiple lines without errors
+            string query = @"CREATE TABLE College (
+                                id INT NOT NULL, 
+                                name VARCHAR(100), 
+                                email VARCHAR(50), 
+                                join_date DATE
+                            )";
+ 
+            try
+            {
+                // 'using' blocks automatically close and dispose of resources
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    using (SqlCommand cm = new SqlCommand(query, con))
+                    {
+                        con.Open();
+                        cm.ExecuteNonQuery();
+                        Console.WriteLine("Table created Successfully!");
+                    }
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                // Specifically catches SQL errors (like if the table already exists)
+                Console.WriteLine("SQL Error: " + sqlEx.Message);
+            }
+            catch (Exception e)
+            {
+                // Catches all other general errors
+                Console.WriteLine("OOPs, something went wrong: " + e.Message);
+            }
+        }
+    }
+}
