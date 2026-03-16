@@ -1,0 +1,85 @@
+using System;
+using System.Data;
+using System.Data.SqlClient;
+ 
+namespace AdoNetConsoleApplication
+{
+    class Program
+    {
+        // ADJUST THIS: Ensure 'localhost\\SQLEXPRESS' matches your SSMS Server Name
+        private string connectionString = "data source=localhost\\SQLEXPRESS; initial catalog=Student; integrated security=SSPI";
+ 
+        static void Main(string[] args)
+        {
+            Program p = new Program();
+            Console.WriteLine("--- ADO.NET Specific Data Retrieval ---");
+            Console.Write("Enter Student ID to find: ");
+            // Error Handling for non-numeric input
+            if (int.TryParse(Console.ReadLine(), out int searchId))
+            {
+                p.RetrieveSpecificData(searchId);
+            }
+            else
+            {
+                Console.WriteLine("Invalid Input. Please enter a numeric ID.");
+            }
+ 
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
+ 
+        public void RetrieveSpecificData(int searchId)
+        {
+            // Use @id (Parameter) to prevent SQL Injection errors
+            string query = "SELECT id, name, email, join_date FROM College WHERE id = @id";
+ 
+            try
+            {
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    using (SqlCommand cm = new SqlCommand(query, con))
+                    {
+                        // 1. Add the parameter
+                        cm.Parameters.AddWithValue("@id", searchId);
+ 
+                        // 2. Open the connection
+                        con.Open();
+ 
+                        // 3. Execute and read
+                        using (SqlDataReader sdr = cm.ExecuteReader())
+                        {
+                            if (sdr.HasRows) 
+                            {
+                                while (sdr.Read())
+                                {
+                                    Console.WriteLine("\n[Record Found]");
+                                    Console.WriteLine($"ID:        {sdr["id"]}");
+                                    Console.WriteLine($"Name:      {sdr["name"]}");
+                                    Console.WriteLine($"Email:     {sdr["email"]}");
+                                    Console.WriteLine($"Join Date: {Convert.ToDateTime(sdr["join_date"]).ToShortDateString()}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"\nNo record found with ID: {searchId}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                // This catches database-specific errors (server down, table missing)
+                Console.WriteLine("\n[DATABASE ERROR]");
+                Console.WriteLine("Message: " + sqlEx.Message);
+                Console.WriteLine("Error Number: " + sqlEx.Number);
+            }
+            catch (Exception ex)
+            {
+                // This catches general C# errors
+                Console.WriteLine("\n[SYSTEM ERROR]");
+                Console.WriteLine("Message: " + ex.Message);
+            }
+        }
+    }
+}
